@@ -1,12 +1,13 @@
 /* Two-finger swipe between blocks: a trackpad swipe (wheel) or two fingers on a touch screen.
    Fingers moving left go to the next block, fingers moving right go to the previous one.
+   Goes only through the main tour (blocks without hidden: true); before the first block it returns to the blocks, after the last it stays.
    Reads the block number from <body data-block="N"> and the neighbours from window.EXS_BLOCKS.
    One-finger gestures are left alone unless the page has data-swipe1; pinches are always left alone. Works from file:// (links end with index.html). */
 (() => {
   'use strict';
   const N = parseInt(document.body && document.body.dataset.block, 10);
-  const list = (window.EXS_BLOCKS || []).filter(b => b.ready && b.href);
-  if (!N || !list.length) return;
+  const list = (window.EXS_BLOCKS || []).filter(b => b.ready && b.href && !b.hidden);   // the main tour only
+  if (!N) return;
   const prev = list.filter(b => b.n < N).pop() || null, next = list.find(b => b.n > N) || null;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const url = b => '../' + b.href.replace(/^\.\//, '') + 'index.html';
@@ -56,8 +57,14 @@
     if (locked()) return;
     lockedUntil = performance.now() + LOCK_MS;
     const target = d > 0 ? next : prev, name = d > 0 ? 'next' : 'prev';
+    if (!target && d < 0) {   // before the first block of the tour: back to the blocks
+      if (reduce) { location.href = '../index.html#how'; return; }
+      document.body.classList.add('exs-sw', 'exs-out-prev');
+      setTimeout(() => { location.href = '../index.html#how'; }, FADE_MS);
+      return;
+    }
     if (!target) {
-      say(d > 0 ? 'No next block yet' : 'This is the first block', 1500);
+      say('This is the last key block', 1500);
       if (!reduce) {
         const b = document.body; b.classList.add('exs-sw', 'exs-bump-' + name);
         setTimeout(() => b.classList.remove('exs-bump-' + name), 140);

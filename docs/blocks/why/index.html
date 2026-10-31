@@ -17,11 +17,10 @@
   .back:hover, .back:focus-visible { box-shadow: 0 0 14px color-mix(in srgb, var(--neon) 45%, transparent); outline: none; }
   .back:active { background: var(--neon); color: var(--on-neon); }
   .kicker { font: 700 14px var(--mono); letter-spacing: .22em; text-transform: uppercase; color: var(--neon); }
-  h1 { margin: 6px 0 0; font: 700 clamp(30px, 4.4vw, 56px)/1.1 var(--head); letter-spacing: -.01em; }
-  .sub { margin-top: 8px; font-size: clamp(16px, 1.6vw, 20px); color: var(--muted); }
+  h1 { margin: 6px 0 0; font: 700 clamp(28px, 4vw, 52px)/1.1 var(--head); letter-spacing: -.01em; }
 
-  #stage { position: fixed; left: 0; right: 0; top: var(--top, 190px); bottom: var(--bot, 130px); touch-action: pan-y; }
-  .scene { position: absolute; left: 50%; top: 0; bottom: 0; width: min(1100px, calc(100% - 64px)); transform: translateX(-50%); display: flex; flex-direction: column; justify-content: center; gap: 18px;
+  #stage { position: fixed; left: 0; right: 0; top: var(--top, 150px); bottom: var(--bot, 130px); touch-action: pan-y; }
+  .scene { position: absolute; left: 50%; top: 0; bottom: 0; width: min(1100px, calc(100% - 64px)); transform: translateX(-50%); display: flex; flex-direction: column; justify-content: center; gap: 16px;
     opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s ease, visibility 0s .3s; }
   .scene.on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .3s ease, visibility 0s; }
 
@@ -36,58 +35,61 @@
   #dots i.on { background: var(--neon); border-color: var(--neon); box-shadow: 0 0 8px var(--neon); }
   #prog { font: 14px var(--mono); color: var(--muted); min-width: 3.4em; }
 
-  /* scene 1: sound -> numbers -> model -> chip */
-  #chain { display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .node { flex: 1; max-width: 220px; min-height: min(30vh, 220px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; border-radius: 16px; border: 1.3px solid var(--link);
-    background: color-mix(in srgb, var(--bg-glow) 85%, transparent); cursor: pointer; transition: background .25s, border-color .25s, color .25s, box-shadow .25s, opacity .5s, transform .5s; -webkit-tap-highlight-color: transparent; opacity: 0; transform: translateY(14px); }
-  .scene.on .node { opacity: 1; transform: none; transition-delay: 0s, 0s, 0s, 0s, calc(var(--i) * .15s), calc(var(--i) * .15s); }
-  .node:hover, .node:focus-visible { box-shadow: 0 0 16px color-mix(in srgb, var(--neon) 40%, transparent); outline: none; }
-  .node svg { width: 64px; height: 44px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; color: var(--gray); }
-  .node b { font: 700 clamp(20px, 2.4vw, 30px) var(--mono); }
-  .node.sel { background: var(--neon); border-color: var(--neon); color: var(--on-neon); } .node.sel svg { color: var(--on-neon); }
-  .arrow { font: 28px var(--mono); color: var(--link); flex: none; }
-  #tip { min-height: 30px; text-align: center; font: 700 clamp(16px, 1.8vw, 21px)/1.4 var(--mono); color: var(--neon); transition: opacity .2s; }
-  #tip.idle { color: var(--muted); font-weight: 400; }
+  /* Before -> After */
+  .ba { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.35fr); gap: 18px; align-items: stretch; flex: 1; max-height: 440px; min-height: 0; }
+  .card { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 18px; text-align: left; min-height: 0; }
+  .card .tag { font: 700 14px var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+  .card .txt { font-size: 17px; line-height: 1.35; }
+  .vis { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 0; }
+  .before { border: 1.3px dashed var(--gray); background: color-mix(in srgb, var(--gray) 7%, transparent); color: var(--muted); opacity: .85; }
+  .before .tag { color: var(--gray); }
+  .after { position: relative; border: 1.6px solid var(--neon); background: color-mix(in srgb, var(--neon) 7%, transparent); box-shadow: 0 0 22px color-mix(in srgb, var(--neon) 20%, transparent); cursor: pointer; color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  .after .tag { color: var(--neon); display: flex; justify-content: space-between; gap: 8px; } .after .tag i { font: normal 14px var(--mono); letter-spacing: 0; color: var(--muted); text-transform: none; }
+  .after .txt { font-size: 20px; font-weight: 700; }
+  .after:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .after.flash { animation: flash .8s ease; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 color-mix(in srgb, var(--neon) 0%, transparent); background: color-mix(in srgb, var(--neon) 7%, transparent); } 30% { box-shadow: 0 0 46px var(--neon); background: color-mix(in srgb, var(--neon) 24%, transparent); } 100% { box-shadow: 0 0 22px color-mix(in srgb, var(--neon) 20%, transparent); background: color-mix(in srgb, var(--neon) 7%, transparent); } }
+  .arrow { align-self: center; font: 700 34px var(--mono); color: var(--neon); }
+  .res { min-height: 40px; text-align: center; font: 700 clamp(18px, 2.2vw, 28px)/1.3 var(--mono); color: var(--neon); opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s; }
+  .res.on { opacity: 1; transform: none; }
 
-  /* scene 2: the word, and a desktop that cleans itself */
-  .s2 { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
-  #say { flex: none; width: 230px; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 22px 16px; border-radius: 16px; border: 1.3px solid var(--neon); background: color-mix(in srgb, var(--neon) 7%, transparent); cursor: pointer; }
-  #say b { font: 700 clamp(28px, 3.4vw, 44px) var(--mono); color: var(--neon); }
-  #wave { display: flex; align-items: center; gap: 4px; height: 56px; }
-  #wave i { width: 5px; height: 10px; border-radius: 3px; background: var(--link); transition: height .15s; }
-  #say.talk #wave i { animation: bar .5s ease-in-out infinite alternate; animation-delay: calc(var(--k) * 45ms); }
-  @keyframes bar { from { height: 8px; } to { height: 52px; background: var(--neon); } }
-  #say small { font: 14px var(--mono); color: var(--muted); }
-  #desk { position: relative; flex: 1; max-width: 700px; aspect-ratio: 16 / 10; max-height: 100%; border-radius: 14px; border: 1.3px solid var(--dim); background: color-mix(in srgb, var(--bg-glow) 60%, transparent); cursor: pointer; overflow: hidden; }
-  .win { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); display: flex; flex-direction: column; border-radius: 10px; border: 1.2px solid var(--gray); background: var(--bg); overflow: hidden;
-    transition: opacity .35s ease, transform .35s ease; transition-delay: var(--d, 0s); }
-  .win .bar { display: flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; background: color-mix(in srgb, var(--gray) 14%, transparent); border-bottom: 1px solid var(--dim); }
-  .win .bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); }
-  .win .name { flex: 1; display: grid; place-items: center; font: 700 clamp(14px, 1.6vw, 18px) var(--mono); color: var(--muted); }
-  .win.keep { border-color: var(--link); } .win.keep .name { color: var(--ink); }
-  .run .win:not(.keep) { opacity: 0; transform: scale(.88); }
-  #dnd { position: absolute; right: 12px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--neon); background: var(--bg); font: 700 14px var(--mono); color: var(--neon);
-    opacity: 0; transform: translateY(-8px); transition: opacity .35s, transform .35s; }
-  #dnd svg { width: 16px; height: 16px; fill: currentColor; }
-  .run #dnd { opacity: 1; transform: none; transition-delay: 2.1s; }
+  /* scene 2: a desktop with ten windows */
+  .desk { position: relative; margin-top: 12px; width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); gap: 6px; padding: 8px; height: clamp(110px, 24vh, 200px); border-radius: 12px; border: 1.2px solid var(--dim); background: color-mix(in srgb, var(--bg-glow) 60%, transparent); }
+  .tile { white-space: nowrap; display: grid; place-items: center; border-radius: 8px; border: 1.1px solid var(--gray); background: var(--bg); font: 14px var(--body); color: var(--muted); min-width: 0; overflow: hidden; transition: opacity .35s, transform .35s; transition-delay: var(--d, 0s); }
+  .tile.keep { border-color: var(--link); color: var(--ink); font-weight: 700; }
+  .after .tile.closed:not(.keep) { opacity: 0; transform: scale(.85); }
+  .badge { position: absolute; right: 8px; top: -14px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--gray); background: var(--bg); font: 700 14px var(--mono); color: var(--ink); display: flex; gap: 6px; align-items: center; }
+  .badge svg { width: 14px; height: 14px; fill: currentColor; }
+  .after .badge { border-color: var(--neon); color: var(--neon); }
+  .say { display: flex; align-items: center; gap: 14px; }
+  .say b { font: 700 clamp(22px, 2.6vw, 32px) var(--mono); color: var(--neon); }
+  .wave { display: flex; align-items: center; gap: 3px; height: 36px; }
+  .wave i { width: 4px; height: 8px; border-radius: 2px; background: var(--link); }
+  .talk .wave i { animation: bar .5s ease-in-out infinite alternate; animation-delay: calc(var(--k) * 45ms); }
+  @keyframes bar { from { height: 6px; } to { height: 34px; background: var(--neon); } }
   .instant, .instant * { transition: none !important; }
+
+  /* scene 2: typed text */
+  .typed { margin: 0 auto; width: min(60ch, 100%); text-align: left; font: clamp(22px, 2.4vw, 30px)/1.5 var(--mono); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .typed p { margin: 0 0 .9em; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .typed .c { visibility: hidden; } .typed .c.v { visibility: visible; }
+  .cur { display: inline-block; width: .6ch; height: 1.1em; margin-left: 1px; vertical-align: text-bottom; background: var(--neon); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
 
   @media (max-width: 699px) {
     .hud { left: 16px; right: 16px; top: 18px; }
-    .scene { width: calc(100% - 32px); gap: 12px; }
+    .scene { width: calc(100% - 32px); gap: 8px; }
     #cap { font-size: 14px; bottom: 76px; }
-    h1 { font-size: 30px; }
-    #chain { flex-direction: column; gap: 4px; }
-    .node { flex: none; width: 100%; max-width: none; min-height: 0; flex-direction: row; justify-content: flex-start; gap: 16px; padding: 10px 16px; }
-    .node svg { width: 52px; height: 36px; }
-    .arrow { transform: rotate(90deg); font-size: 22px; line-height: 1; }
-    .s2 { flex-direction: column; gap: 14px; }
-    #say { width: 100%; flex-direction: row; justify-content: space-between; padding: 10px 16px; } #say small { display: none; } #wave { height: 40px; }
-    #desk { flex: none; width: 100%; max-height: none; }
-    .win .bar { height: 16px; padding: 0 5px; } .win .bar i { width: 6px; height: 6px; } .win .name { font-size: 14px; }
-    #dnd { font-size: 14px; padding: 4px 8px; right: 6px; top: 6px; }
+    h1 { font-size: 28px; }
+    .ba { grid-template-columns: 1fr; gap: 4px; max-height: none; }
+    .arrow { transform: rotate(90deg); font-size: 24px; line-height: 1; justify-self: center; }
+    .card { padding: 10px 14px; gap: 6px; } .card .txt { font-size: 15px; } .after .txt { font-size: 16px; }
+    .desk { height: 84px; padding: 6px; gap: 4px; }
+    .say b { font-size: 20px; } .wave { height: 24px; }
+    .res { min-height: 30px; font-size: 16px; }
+    .typed { font-size: 22px; }
   }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .cur { display: none; } }
 </style>
 </head>
 <body>
@@ -96,15 +98,11 @@
   <a class="back" href="../index.html">← all blocks</a>
   <div class="kicker" id="kicker"></div>
   <h1 id="title"></h1>
-  <div class="sub" id="sub"></div>
 </div>
 
-<main id="stage" aria-label="Why: practice, and a tool I will use">
-  <section class="scene" id="s1"><div id="chain"></div><div id="tip" class="idle">tap a step</div></section>
-  <section class="scene s2" id="s2">
-    <div id="say" data-own-tap><b>“focus”</b><div id="wave"></div><small>tap to say it again</small></div>
-    <div id="desk" data-own-tap aria-label="A desktop: five windows close, VS Code and Safari stay"></div>
-  </section>
+<main id="stage" aria-label="Why: what the project gives me">
+  <section class="scene" id="s1"></section>
+  <section class="scene" id="s2"></section>
 </main>
 
 <div id="cap" aria-live="polite"></div>
@@ -120,71 +118,101 @@
 (() => {
 'use strict';
 const SCENES = [
-  { kicker: 'Why · 01', title: 'Practice.',     sub: 'Machine learning on something I can hear and test myself.', cap: 'A small problem with every step visible.' },
-  { kicker: 'Why · 02', title: 'I will use it.', sub: 'A study tool that stays on my desk.',                       cap: 'One word closes the distractions. I say it before I study.' },
+  { kicker: 'Why · 01', title: 'I will use it.', cap: 'One word closes the distractions. I say it before I study.',
+    before: 'Ten windows and a pile of notifications.', after: 'Say “focus”: only VS Code and Safari stay.', result: 'One spoken word and the screen is ready to work.' },
+  { kicker: 'Why · 02', title: 'Practice.', cap: '' },
 ];
-const STEPS = [
-  { name: 'sound',   tip: 'Record a word with a microphone.',           icon: '<path d="M2 22c4 0 4-14 8-14s4 28 8 28 4-24 8-24 4 20 8 20 4-10 8-10 4 6 8 6"/>' },
-  { name: 'numbers', tip: 'Turn the sound into a small table of numbers.', icon: '<rect x="6" y="6" width="52" height="32" rx="4"/><path d="M6 17h52M6 28h52M23 6v32M41 6v32"/>' },
-  { name: 'model',   tip: 'Train a small neural network on those numbers.', icon: '<circle cx="10" cy="12" r="4"/><circle cx="10" cy="32" r="4"/><circle cx="32" cy="8" r="4"/><circle cx="32" cy="22" r="4"/><circle cx="32" cy="36" r="4"/><circle cx="54" cy="22" r="4"/><path d="M14 12l14-4M14 12l14 10M14 32l14-10M14 32l14 4M36 8l14 14M36 22h14M36 36l14-14"/>' },
-  { name: 'chip',    tip: 'Run it on a board the size of a thumb.',     icon: '<rect x="16" y="8" width="32" height="28" rx="4"/><path d="M24 8V2M32 8V2M40 8V2M24 36v6M32 36v6M40 36v6M16 17h-6M16 27h-6M48 17h6M48 27h6"/>' },
-];
-/* The desktop: five windows close in turn, VS Code and Safari stay. (If what/assets/focus gets real window images, replace the placeholders here.) */
+const LINES = ['I built this model to get hands-on practice with machine learning.', 'The animations on this site make the details of the project easier to understand.'];
+const CHAR_MS = 35, LINE_PAUSE_MS = 400;
+/* The desktop: ten windows, two stay. (If what/assets/focus gets real window images, replace the placeholder tiles here.) */
 const FOCUS_WINDOWS = [
-  { name: 'Mail',    x: '3%',  y: '5%',  w: '34%', h: '38%', close: 1 },
-  { name: 'Chrome',  x: '30%', y: '8%',  w: '38%', h: '42%', close: 2 },
-  { name: 'Music',   x: '62%', y: '4%',  w: '30%', h: '34%', close: 3 },
-  { name: 'Notes',   x: '4%',  y: '52%', w: '30%', h: '40%', close: 4 },
-  { name: 'Slack',   x: '58%', y: '46%', w: '36%', h: '42%', close: 5 },
-  { name: 'VS Code', x: '14%', y: '30%', w: '40%', h: '46%', keep: true },
-  { name: 'Safari',  x: '44%', y: '36%', w: '40%', h: '44%', keep: true },
+  { name: 'Mail' }, { name: 'Chrome' }, { name: 'VS Code', keep: true }, { name: 'Music' }, { name: 'Notes' },
+  { name: 'Slack' }, { name: 'Photos' }, { name: 'Safari', keep: true }, { name: 'Teams' }, { name: 'Chat' },
 ];
-const NSCENES = SCENES.length, $ = id => document.getElementById(id);
+const NOTIFICATIONS = 27;
+
+const $ = id => document.getElementById(id);
 const stage = $('stage'), hud = $('hud'), cap = $('cap'), prevBtn = $('prev'), nextBtn = $('next'), onward = $('onward');
 const dots = [...document.querySelectorAll('#dots i')], scenes = [...document.querySelectorAll('.scene')];
 const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const MOON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 10.5A6 6 0 0 1 5.5 3a6 6 0 1 0 7.5 7.5z"/></svg>';
 
-// scene 1
-const tip = $('tip'), nodes = []; let sel = -1;
-STEPS.forEach((s, i) => {
-  if (i) { const a = document.createElement('span'); a.className = 'arrow'; a.textContent = '→'; a.setAttribute('aria-hidden', 'true'); $('chain').appendChild(a); }
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'node'; b.style.setProperty('--i', i);
-  b.innerHTML = `<svg viewBox="0 0 64 44" aria-hidden="true">${s.icon}</svg><b>${s.name}</b>`;
-  b.addEventListener('click', () => { sel = sel === i ? -1 : i; nodes.forEach((n, k) => n.classList.toggle('sel', k === sel)); tip.textContent = sel >= 0 ? STEPS[sel].tip : 'tap a step'; tip.classList.toggle('idle', sel < 0); });
-  $('chain').appendChild(b); nodes.push(b);
-});
-
-// scene 2
-const desk = $('desk'), say = $('say'), wave = $('wave'); let runTimer = 0;
-for (let k = 0; k < 14; k++) { const i = document.createElement('i'); i.style.setProperty('--k', k); wave.appendChild(i); }
-FOCUS_WINDOWS.forEach(w => {
-  const d = document.createElement('div'); d.className = 'win' + (w.keep ? ' keep' : '');
-  d.style.cssText = `--x:${w.x};--y:${w.y};--w:${w.w};--h:${w.h};--d:${w.keep ? 0 : (0.5 + w.close * 0.3).toFixed(2)}s`;
-  d.innerHTML = `<div class="bar"><i></i><i></i><i></i></div><div class="name">${w.name}</div>`; desk.appendChild(d);
-});
-const dnd = document.createElement('div'); dnd.id = 'dnd'; dnd.innerHTML = '<svg viewBox="0 0 16 16"><path d="M13 10.5A6 6 0 0 1 5.5 3a6 6 0 1 0 7.5 7.5z"/></svg>Do Not Disturb'; desk.appendChild(dnd);
-function playDesk() {
-  clearTimeout(runTimer); desk.classList.add('instant'); desk.classList.remove('run'); say.classList.remove('talk'); void desk.offsetWidth; desk.classList.remove('instant');
-  if (reduce) { desk.classList.add('run'); return; }
-  say.classList.add('talk'); runTimer = setTimeout(() => { desk.classList.add('run'); }, 700); setTimeout(() => say.classList.remove('talk'), 1500);
+// the Before / After skeleton: two cards, an arrow, the result line
+function ba(host, S) {
+  const row = el('div', 'ba'), b = el('div', 'card before'), arrow = el('div', 'arrow', '→'), a = el('button', 'card after');
+  a.type = 'button'; arrow.setAttribute('aria-hidden', 'true');
+  b.append(el('div', 'tag', 'Before'), el('div', 'txt', S.before)); const bv = el('div', 'vis'); b.appendChild(bv);
+  const tag = el('div', 'tag'); tag.append('After'); tag.appendChild(el('i', '', 'tap')); a.append(tag, el('div', 'txt', S.after)); const av = el('div', 'vis'); a.appendChild(av);
+  row.append(b, arrow, a); const res = el('div', 'res', S.result); host.append(row, res);
+  return { a, bv, av, res };
 }
-desk.addEventListener('click', playDesk); say.addEventListener('click', playDesk);
+const fire = (a, res, extra) => { a.classList.remove('flash'); void a.offsetWidth; a.classList.add('flash'); res.classList.add('on'); if (extra) extra(); };
+
+const reset = [];   // per scene: back to the start state
+// scene 1
+let sayEl, talkTimer = 0;
+(function () {
+  const S = SCENES[0], x = ba($('s1'), S);
+  const desk = (after) => {
+    const d = el('div', 'desk'); FOCUS_WINDOWS.forEach((w, i) => { const t = el('div', 'tile' + (w.keep ? ' keep' : ''), w.name); t.style.setProperty('--d', (after ? i * 0.07 : 0).toFixed(2) + 's'); d.appendChild(t); });
+    const b = el('div', 'badge'); if (after) b.innerHTML = MOON + 'Do Not Disturb'; else b.textContent = NOTIFICATIONS + ' new'; d.appendChild(b); return d;
+  };
+  x.bv.appendChild(desk(false));
+  sayEl = el('div', 'say'); sayEl.appendChild(el('b', '', '“focus”')); const w = el('div', 'wave'); for (let k = 0; k < 12; k++) { const i = el('i'); i.style.setProperty('--k', k); w.appendChild(i); } sayEl.appendChild(w);
+  const ad = desk(true); x.av.append(sayEl, ad);
+  const replay = () => {
+    clearTimeout(talkTimer); ad.classList.add('instant'); ad.querySelectorAll('.tile').forEach(t => t.classList.remove('closed')); sayEl.classList.remove('talk'); void ad.offsetWidth; ad.classList.remove('instant');
+    if (reduce) { ad.querySelectorAll('.tile').forEach(t => t.classList.add('closed')); return; }
+    sayEl.classList.add('talk'); talkTimer = setTimeout(() => { ad.querySelectorAll('.tile').forEach(t => t.classList.add('closed')); sayEl.classList.remove('talk'); }, 800);
+  };
+  x.a.addEventListener('click', () => fire(x.a, x.res, replay));
+  reset[0] = () => { clearTimeout(talkTimer); sayEl.classList.remove('talk'); ad.querySelectorAll('.tile').forEach(t => t.classList.toggle('closed', reduce)); x.a.classList.remove('flash'); x.res.classList.toggle('on', reduce); };
+})();
+// scene 2: the typed text
+const typing = (() => {
+  const box = el('div', 'typed'), chars = [], cur = el('span', 'cur'); let pos = 0, timer = 0, busy = false, onChange = () => {};
+  box.setAttribute('data-own-tap', ''); box.setAttribute('aria-label', LINES.join(' ')); cur.setAttribute('aria-hidden', 'true');
+  const lineStart = [];
+  LINES.forEach(t => { const p = el('p'); p.setAttribute('aria-hidden', 'true'); lineStart.push(chars.length); [...t].forEach(ch => { const c = el('span', 'c', ch); chars.push(c); p.appendChild(c); }); box.appendChild(p); });
+  $('s2').appendChild(box);
+  const show = n => { chars.forEach((c, i) => c.classList.toggle('v', i < n)); pos = n; if (n < chars.length) chars[n].before(cur); else chars[chars.length - 1].after(cur); };
+  const stop = () => { clearTimeout(timer); busy = false; onChange(); };
+  function step() {
+    if (pos >= chars.length) { stop(); return; }
+    show(pos + 1);
+    timer = setTimeout(step, lineStart.includes(pos) ? CHAR_MS + LINE_PAUSE_MS : CHAR_MS);   // a pause before the next line starts
+  }
+  return {
+    get busy() { return busy; }, set onChange(f) { onChange = f; },
+    play() { clearTimeout(timer); if (reduce) { show(chars.length); busy = false; return; } busy = true; show(0); onChange(); timer = setTimeout(step, 250); },
+    finish() { clearTimeout(timer); show(chars.length); stop(); },
+    reset() { clearTimeout(timer); busy = false; show(reduce ? chars.length : 0); },
+  };
+})();
+reset[1] = () => {};   // the text starts typing in setScene
+$('s2').querySelector('.typed').addEventListener('click', () => typing.play());
 
 let scene = 0;
+// while the text is typing, → stays on screen and finishes it; the next tap goes on
+function syncNav() { const last = scene === scenes.length; prevBtn.disabled = scene === 1; nextBtn.hidden = last && !(scene === 2 && typing.busy); onward.hidden = !last || (scene === 2 && typing.busy); }
+typing.onChange = () => setTimeout(syncNav, 0);   // after the key / tap that finished it, so that it does not also go on
+const advance = () => { if (scene === 2 && typing.busy) typing.finish(); else setScene(scene + 1); };
 const fit = () => { stage.style.setProperty('--top', (hud.getBoundingClientRect().bottom + 8) + 'px'); stage.style.setProperty('--bot', (innerHeight - cap.getBoundingClientRect().top + 8) + 'px'); };
 function setScene(n) {
-  n = clamp(n, 1, NSCENES); const was = scene; scene = n;
+  n = clamp(n, 1, scenes.length); const was = scene; if (n !== scene) reset[n - 1]();
+  scene = n;
   scenes.forEach((s, i) => s.classList.toggle('on', i === n - 1));
   dots.forEach((d, i) => d.classList.toggle('on', i === n - 1));
-  $('prog').textContent = `${n} / ${NSCENES}`;
-  prevBtn.disabled = n === 1; nextBtn.hidden = n === NSCENES; onward.hidden = n !== NSCENES;
-  const S = SCENES[n - 1]; $('kicker').textContent = S.kicker; $('title').textContent = S.title; $('sub').textContent = S.sub; cap.textContent = S.cap;
-  if (n === 2 && was !== 2) playDesk();
+  $('prog').textContent = `${n} / ${scenes.length}`;
+  if (n === 2 && n !== was) typing.play(); else if (n !== 2) typing.reset();
+  syncNav();
+  const S = SCENES[n - 1]; $('kicker').textContent = S.kicker; $('title').textContent = S.title; cap.textContent = S.cap;
   fit();
 }
-prevBtn.addEventListener('click', () => setScene(scene - 1)); nextBtn.addEventListener('click', () => setScene(scene + 1));
-addEventListener('keydown', e => { if (e.key === 'ArrowRight') setScene(scene + 1); else if (e.key === 'ArrowLeft') setScene(scene - 1); });
+prevBtn.addEventListener('click', () => setScene(scene - 1)); nextBtn.addEventListener('click', advance);
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') advance(); else if (e.key === 'ArrowLeft') setScene(scene - 1); });
 addEventListener('resize', fit);
 // one-finger swipe changes the scene; the click that follows a swipe is ignored
 let down = null, swiped = false;
@@ -195,7 +223,7 @@ stage.addEventListener('pointerup', e => {
   if (d.type !== 'mouse' && Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) { swiped = true; setScene(scene + (dx < 0 ? 1 : -1)); }
 });
 stage.addEventListener('click', e => { if (swiped) { e.stopPropagation(); e.preventDefault(); swiped = false; } }, true);
-setScene(1); document.fonts && document.fonts.ready.then(fit);
+reset.forEach(f => f()); setScene(1); document.fonts && document.fonts.ready.then(fit);
 window.__why = { scene: () => scene, go: setScene };
 })();
 </script>

@@ -99,7 +99,7 @@
     <nav class="rows" aria-label="Sections">
       <a class="row" href="./what/index.html"><span class="big">What.</span><span class="cap">what it does</span></a>
       <a class="row" href="./why/index.html"><span class="big">Why.</span><span class="cap">why this project</span></a>
-      <a class="row" href="#how"><span class="big">How.</span><span class="cap">how it works</span></a>
+      <a class="row" href="#how"><span class="big">How.</span><span class="cap" id="howCap">how it works</span></a>
     </nav>
   </div>
 
@@ -107,6 +107,7 @@
     <div class="topbar"><a class="back" href="#">← back</a><span class="mini">exs</span></div>
     <h2>How.</h2>
     <p class="lead">From sound to action, block by block.</p>
+    <p class="lead" id="keyNote" style="margin-top:-18px;font-size:14px"></p>
     <div class="grid" id="grid"></div>
   </section>
 </main>
@@ -122,7 +123,10 @@
    otherwise it is shown as "soon". Paths are relative to this file
    (docs/blocks/index.html).
 ------------------------------------------------------------------ */
-const BLOCKS = window.EXS_BLOCKS.map(b => ({ t: b.title, s: b.sub, href: b.href, ready: b.ready, chip: b.chip }));
+const BLOCKS = window.EXS_TOUR.map(b => ({ t: b.title, s: b.sub, href: b.href, ready: b.ready, nb: b.nb }));
+const KEY_COUNT = BLOCKS.length;   // "5 key blocks": the one place the number comes from
+document.getElementById('keyNote').textContent = KEY_COUNT + ' key blocks of ' + window.EXS_NOTEBOOK_TOTAL + ' in the notebook';
+document.getElementById('howCap').textContent = 'how it works · ' + KEY_COUNT + ' key blocks';
 
 const grid = document.getElementById('grid');
 BLOCKS.forEach((b, i) => {
@@ -134,7 +138,7 @@ BLOCKS.forEach((b, i) => {
   el.innerHTML = `<span class="n">${n}</span><span class="t"></span><span class="s"></span><span class="chip"></span>`;
   el.querySelector('.t').textContent = b.t;
   el.querySelector('.s').textContent = b.s;
-  if (open) el.querySelector('.chip').remove(); else el.querySelector('.chip').textContent = 'soon';   // only the unfinished blocks carry a label
+  el.querySelector('.chip').textContent = open ? 'notebook block ' + b.nb : 'soon';
   grid.appendChild(el);
 });
 
