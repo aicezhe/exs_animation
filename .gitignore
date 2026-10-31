@@ -13,10 +13,9 @@ __pycache__/
 model/data/
 model/exported/*.tflite
 
-# Node / Next.js
-server/node_modules/
-server/.next/
-server/next-env.d.ts
+# Server logs and secrets
+server/logs/
+server/.env.local
 
 # OS / editors
 .DS_Store
