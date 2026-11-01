@@ -56,7 +56,7 @@ def frame_db(y):
     return 10.0 * np.log10(energy + 1e-10)
 
 
-def find_segments(y, margin_db, min_gap, min_len, floor_seconds=3.0):
+def find_segments(y, margin_db, min_gap, min_len, floor_seconds=3.0, skip_start=0.0):
     """Return a list of (start, end) sample indices of utterances."""
     db = uniform_filter1d(frame_db(y), size=5)                       # smooth over ~50 ms
     size = max(3, int(floor_seconds / (HOP / SR)))
@@ -77,8 +77,24 @@ def find_segments(y, margin_db, min_gap, min_len, floor_seconds=3.0):
             merged.append([a, b])
 
     min_frames = int(min_len / (HOP / SR))
-    segs = [(a * HOP, b * HOP + WIN) for a, b in merged if b - a >= min_frames]
+    segs = [(a * HOP, b * HOP + WIN) for a, b in merged
+            if b - a >= min_frames and a * HOP >= skip_start * SR]      # drop the record-button thump at the start
     return segs, db, floor
+
+
+def boundary_check(segs, counts):
+    """Long pauses should fall between the modes. Returns a short text, '' if nothing to check."""
+    if len(segs) < sum(counts):
+        return ""
+    gaps = [segs[i + 1][0] - segs[i][1] for i in range(len(segs) - 1)]
+    expected, c = [], 0
+    for n in counts[:-1]:
+        c += n
+        expected.append(c)                               # pause after segment number c (1-based)
+    top = sorted(int(i) + 1 for i in np.argsort(gaps)[-len(expected):])
+    if top == expected:
+        return " boundaries OK"
+    return f" boundaries SUSPECT: longest pauses after {top}, expected after {expected}"
 
 
 def cut_clip(y, start, end, n_samples, align):
@@ -138,10 +154,14 @@ def main():
                    help="how far above the noise floor speech must be. Lower it if utterances are missing, raise it if there are extras")
     p.add_argument("--min-gap", type=float, default=0.25, help="pauses shorter than this stay inside one utterance, s")
     p.add_argument("--min-len", type=float, default=0.12, help="ignore sounds shorter than this, s")
+    p.add_argument("--skip-start", type=float, default=0.0,
+                   help="ignore sounds in the first N seconds (the thump of pressing record)")
     p.add_argument("--align", choices=["center", "start"], default="center",
                    help="where the word sits in the 1 s clip")
     p.add_argument("--pick-loudest", action="store_true",
                    help="if more utterances than expected are found, keep the loudest ones (check the preview!)")
+    p.add_argument("--auto", action="store_true",
+                   help="per file, try many margins and gaps and keep the setting that finds exactly the expected number")
     p.add_argument("--force", action="store_true", help="write clips even when the count does not match")
     p.add_argument("--dry-run", action="store_true", help="only write previews and the report")
     a = p.parse_args()
@@ -163,7 +183,23 @@ def main():
             report.append((speaker, word, "-", expected, "skipped (not a command word)"))
             continue
         y = read_audio(f)
-        segs, db, floor = find_segments(y, a.margin_db, a.min_gap, a.min_len)
+        note = ""
+        if a.auto:
+            hits = []
+            for m in range(4, 31):
+                for g in (0.25, 0.35, 0.5):
+                    sg, _, _ = find_segments(y, float(m), g, a.min_len, skip_start=a.skip_start)
+                    if len(sg) == expected:
+                        hits.append((m, g))
+            if hits:
+                m, g = hits[len(hits) // 2]            # middle of the working range = most stable
+                segs, db, floor = find_segments(y, float(m), g, a.min_len, skip_start=a.skip_start)
+                note = f" [auto: margin {m}, gap {g}, {len(hits)} settings work]"
+            else:
+                segs, db, floor = find_segments(y, a.margin_db, a.min_gap, a.min_len, skip_start=a.skip_start)
+                note = " [auto: no setting gives the expected number]"
+        else:
+            segs, db, floor = find_segments(y, a.margin_db, a.min_gap, a.min_len, skip_start=a.skip_start)
         found = len(segs)
         if a.pick_loudest and found > expected:
             power = [float(np.mean(y[s:e] ** 2)) for s, e in segs]
@@ -181,8 +217,9 @@ def main():
                 clip = cut_clip(y, s, e, n_samples, a.align)
                 name = f"{word}.{speaker}.m{m}.{k:02d}.wav"
                 wavfile.write(dst / name, SR, (np.clip(clip, -1, 1) * 32767).astype(np.int16))
+        note += boundary_check(segs, counts) if ok else ""
         longest = max(((e - s) / SR for s, e in segs), default=0.0)
-        report.append((speaker, word, found, expected, f"{status}; longest {longest:.2f} s"))
+        report.append((speaker, word, found, expected, f"{status}; longest {longest:.2f} s{note}"))
 
     print(f"{'speaker':10} {'word':10} {'found':>5} {'expected':>8}  status")
     for r in report:
