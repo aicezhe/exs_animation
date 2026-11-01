@@ -13,6 +13,11 @@ __pycache__/
 model/data/
 model/exported/*.tflite
 
+# Leftover Next.js build and dependencies in server/
+server/node_modules/
+server/.next/
+server/next-env.d.ts
+
 # Server logs and secrets
 server/logs/
 server/.env.local
