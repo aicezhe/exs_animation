@@ -1,16 +1,16 @@
 /* Two-finger swipe between blocks: a trackpad swipe (wheel) or two fingers on a touch screen.
    Fingers moving left go to the next block, fingers moving right go to the previous one.
-   Goes only through the main tour (blocks without hidden: true); before the first block it returns to the blocks, after the last it stays.
+   Goes through all 12 blocks; before the first block it returns to the blocks, after the last it stays.
    Reads the block number from <body data-block="N"> and the neighbours from window.EXS_BLOCKS.
    One-finger gestures are left alone unless the page has data-swipe1; pinches are always left alone. Works from file:// (links end with index.html). */
 (() => {
   'use strict';
   const N = parseInt(document.body && document.body.dataset.block, 10);
-  const list = (window.EXS_BLOCKS || []).filter(b => b.ready && b.href && !b.hidden);   // the main tour only
+  const list = window.EXS_BLOCKS || [];   // all 12 blocks: an animation page where there is one, otherwise the code page
   if (!N) return;
   const prev = list.filter(b => b.n < N).pop() || null, next = list.find(b => b.n > N) || null;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const url = b => '../' + b.href.replace(/^\.\//, '') + 'index.html';
+  const url = b => '../' + b.href.replace(/^\.\//, '');
   const WHEEL_MIN = 90, LOCK_MS = 800, SHIFT = 40, FADE_MS = 200;
   const TOUCH_DX = 70, TOUCH_MS = 700, PINCH_MAX = .15;
 
@@ -64,7 +64,7 @@
       return;
     }
     if (!target) {
-      say('This is the last key block', 1500);
+      say('This is the last block', 1500);
       if (!reduce) {
         const b = document.body; b.classList.add('exs-sw', 'exs-bump-' + name);
         setTimeout(() => b.classList.remove('exs-bump-' + name), 140);

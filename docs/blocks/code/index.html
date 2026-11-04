@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block code</title>
+<link rel="stylesheet" href="../_shared/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; min-height: 100%; background: var(--page-bg); background-attachment: fixed; color: var(--ink); font-family: var(--body); overflow-x: hidden; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 56px; }
+  a { color: inherit; }
+  .back, .pn a, .anim { display: inline-block; padding: 8px 14px; border: 1px solid var(--neon); border-radius: 999px; font-size: 14px; text-decoration: none;
+    transition: box-shadow .2s, background .2s, color .2s; }
+  .back:hover, .back:focus-visible, .pn a:hover, .pn a:focus-visible, .anim:hover, .anim:focus-visible { box-shadow: 0 0 14px color-mix(in srgb, var(--neon) 45%, transparent); outline: none; }
+  .back:active, .pn a:active, .anim:active { background: var(--neon); color: var(--on-neon); }
+
+  header { margin-top: 22px; display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+  .num { font: 700 clamp(44px, 8vw, 84px)/1 var(--mono); color: var(--neon); }
+  .head { flex: 1; min-width: 0; }
+  h1 { margin: 0; font: 700 clamp(28px, 4.4vw, 48px)/1.1 var(--head); letter-spacing: -.01em; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .chip { font: 700 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--gray); color: var(--gray); }
+  .sub { margin: 8px 0 0; color: var(--muted); font-size: 16px; }
+  .anim { margin-top: 12px; }
+
+  .cell { margin-top: 30px; }
+  .note { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: var(--ink); }
+  .box { position: relative; border: 1px solid color-mix(in srgb, var(--link) 45%, transparent); border-radius: 12px; background: var(--panel); overflow: hidden; }
+  .scroll { display: flex; overflow-x: auto; padding: 6px 0 12px; }
+  .gut, pre.code { margin: 0; font: 13.5px/1.6 var(--mono); }
+  .gut { white-space: pre; position: sticky; left: 0; flex: none; padding: 0 12px 0 14px; text-align: right; color: var(--dim); background: var(--panel); user-select: none; border-right: 1px solid color-mix(in srgb, var(--dim) 60%, transparent); }
+  pre.code { padding: 0 14px; white-space: pre; tab-size: 4; color: var(--ink); }
+  .bar { display: flex; justify-content: flex-end; padding: 6px 8px 0; }
+  .copy { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--dim); background: var(--panel); color: var(--muted); font: 12px var(--mono); cursor: pointer; }
+  .copy:hover, .copy:focus-visible { border-color: var(--neon); color: var(--ink); outline: none; }
+  .copy.done { border-color: var(--neon); color: var(--neon); }
+  .k { color: var(--neon); } .s { color: var(--code-ink); } .c { color: var(--muted); font-style: italic; } .d { color: var(--gray); }
+
+  .md { margin-top: 30px; max-width: 70ch; font-size: 16px; line-height: 1.55; color: var(--ink); }
+  .md p, .md ol, .md ul { margin: 0 0 12px; } .md h3 { margin: 0 0 10px; font: 600 20px var(--head); }
+  .md code { padding: 1px 6px; border-radius: 6px; background: var(--code-bg); color: var(--code-ink); font: 14px var(--mono); }
+
+  .pn { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; flex-wrap: wrap; }
+  .pn a { max-width: 100%; }
+  .pn .sp { flex: 1; }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../index.html#how">← back</a>
+  <header>
+    <div class="num" id="num"></div>
+    <div class="head">
+      <h1><span id="title"></span><span class="chip">code</span></h1>
+      <p class="sub" id="sub"></p>
+      <a class="anim" id="anim" href="#" hidden>Open the animation →</a>
+    </div>
+  </header>
+  <div id="cells"></div>
+  <nav class="pn" aria-label="Blocks"><span id="prev"></span><span class="sp"></span><span id="next"></span></nav>
+</main>
+
+<script src="../_shared/blocks.js"></script>
+<script src="../code-data.js"></script>
+<script>
+(() => {
+'use strict';
+const BLOCKS = window.EXS_BLOCKS, CODE = window.EXS_CODE || {};
+const N = parseInt(new URLSearchParams(location.search).get('block'), 10);
+const me = BLOCKS.find(b => b.n === N) || BLOCKS[0];
+const $ = id => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const back = '../'; const to = b => b.href.replace(/^\.\//, back);   // from docs/blocks/code/ to docs/blocks/
+
+/* ---- Python syntax colours: comments, strings, numbers, keywords (one pass, no library) ---- */
+const KW = new Set('and as assert break class continue def del elif else except finally for from global if import in is lambda None nonlocal not or pass raise return try while with yield True False'.split(' '));
+const TOKEN = /(#[^\n]*)|((?:[rRfFbB]{1,2})?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d[\d_]*\.?\d*(?:[eE][-+]?\d+)?\b|\.\d+\b)|(\b[A-Za-z_]\w*\b)/g;
+function highlight(code) {
+  let out = '', last = 0, m; TOKEN.lastIndex = 0;
+  while ((m = TOKEN.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = TOKEN.lastIndex;
+    if (m[1]) out += '<span class="c">' + esc(m[1]) + '</span>';
+    else if (m[2]) out += '<span class="s">' + esc(m[2]) + '</span>';
+    else if (m[3]) out += '<span class="d">' + esc(m[3]) + '</span>';
+    else out += KW.has(m[4]) ? '<span class="k">' + m[4] + '</span>' : esc(m[4]);
+  }
+  return out + esc(code.slice(last));
+}
+
+/* ---- the markdown of a block, small subset: ### heading, paragraphs, 1. lists, - lists, **bold**, `code` ---- */
+const inline = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+function markdown(src) {
+  return src.split(/\n\s*\n/).map(par => {
+    const lines = par.split('\n');
+    if (/^#{2,3}\s/.test(lines[0])) return '<h3>' + inline(lines[0].replace(/^#+\s*/, '')) + '</h3>' + (lines.length > 1 ? '<p>' + inline(lines.slice(1).join(' ')) + '</p>' : '');
+    if (lines.every(l => /^\d+\.\s/.test(l))) return '<ol>' + lines.map(l => '<li>' + inline(l.replace(/^\d+\.\s*/, '')) + '</li>').join('') + '</ol>';
+    if (lines.every(l => /^[-*]\s/.test(l))) return '<ul>' + lines.map(l => '<li>' + inline(l.replace(/^[-*]\s*/, '')) + '</li>').join('') + '</ul>';
+    return '<p>' + inline(lines.join(' ')) + '</p>';
+  }).join('');
+}
+
+function copyText(text, btn) {
+  const done = () => { btn.textContent = 'copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('done'); }, 1400); };
+  const old = () => { const t = el('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { /* no clipboard */ } t.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, old); else old();
+}
+
+function cell(item) {
+  const c = el('section', 'cell');
+  c.appendChild(el('p', 'note', item.note));
+  const box = el('div', 'box'), sc = el('div', 'scroll');
+  const lines = item.code.split('\n').length;
+  const gut = el('div', 'gut'); gut.setAttribute('aria-hidden', 'true'); gut.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  const pre = el('pre', 'code'); const code = el('code'); code.innerHTML = highlight(item.code); pre.appendChild(code);
+  sc.append(gut, pre);
+  const btn = el('button', 'copy', 'copy'); btn.type = 'button'; btn.setAttribute('aria-label', 'Copy the code of this cell');
+  btn.addEventListener('click', () => copyText(item.code, btn));
+  const bar = el('div', 'bar'); bar.appendChild(btn);
+  box.append(bar, sc); c.appendChild(box); return c;
+}
+
+document.title = 'Code · ' + me.title;
+$('num').textContent = String(me.n).padStart(2, '0'); $('title').textContent = me.title; $('sub').textContent = me.subtitle;
+if (me.animated) { const a = $('anim'); a.href = to(me); a.hidden = false; }
+const host = $('cells');
+(CODE[me.n] || []).forEach(item => {
+  if (item.md) { const m = el('div', 'md'); m.innerHTML = markdown(item.md); host.appendChild(m); } else host.appendChild(cell(item));
+});
+if (!host.children.length) host.appendChild(el('p', 'md', 'No notebook cells for this block.'));
+
+// previous / next over all 12 blocks: an animation page where there is one, otherwise the code page
+const prev = BLOCKS.find(b => b.n === me.n - 1), next = BLOCKS.find(b => b.n === me.n + 1);
+const link = (box, b, left) => { if (!b) return; const a = el('a', '', left ? '← ' + String(b.n).padStart(2, '0') + ' ' + b.title : String(b.n).padStart(2, '0') + ' ' + b.title + ' →'); a.href = to(b); box.appendChild(a); };
+link($('prev'), prev, true); link($('next'), next, false);
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  const t = e.key === 'ArrowRight' ? next : e.key === 'ArrowLeft' ? prev : null; if (t) location.href = to(t);
+});
+})();
+</script>
+</body>
+</html>
